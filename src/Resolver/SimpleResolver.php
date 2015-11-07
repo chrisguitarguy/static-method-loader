@@ -13,7 +13,7 @@ namespace Chrisguitarguy\StaticMethodLoader\Resolver;
 /**
  * A class name resolver that just checks to ensure the class exists.
  *
- * @since   2015-11-07
+ * @since   0.1
  */
 final class SimpleResolver extends AbstractResolver
 {

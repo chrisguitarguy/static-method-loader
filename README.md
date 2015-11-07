@@ -30,6 +30,24 @@ _other:
     type: staticmethod
 ```
 
+### Use Bundles in Class Name
+
+You'll need to add the `BundleAwareResolver` to the `StaticMethodLoader`.
+
+```yaml
+# services.yml
+
+services:
+    app.static_method_resolver:
+        class: Chrisguitarguy\StaticMethodLoader\Resolver\BundleAwareResolver
+        arguments ["@kernel"]
+    app.static_method_loader:
+        class: Chrisguitarguy\StaticMethodLoader\StaticMethodLoader
+        arguments: ["@app.static_method_resolver"]
+        tags:
+            - { name: routing.loader }
+```
+
 ## Usage with Only the Routing Component
 
 Pass the `StaticMethodLoader` to your main `Router` class or pass it to a
