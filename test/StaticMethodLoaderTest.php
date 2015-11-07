@@ -11,6 +11,9 @@
 namespace Chrisguitarguy\StaticMethodLoader;
 
 use Symfony\Component\Routing;
+use Symfony\Component\Config\Loader\DelegatingLoader;
+use Symfony\Component\Config\Loader\Loader;
+use Symfony\Component\Config\Loader\LoaderResolver;
 use Symfony\Component\Config\Resource\FileResource;
 
 class StaticMethodLoaderTest extends \PHPUnit_Framework_TestCase
@@ -70,9 +73,27 @@ class StaticMethodLoaderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals([new FileResource(__FILE__)], TestLoader::$routes->getResources());
     }
 
+    public function testStaticMethodsCanImportRoutesFromOtherLoaders()
+    {
+        $router = new Routing\Router(new DelegatingLoader(new LoaderResolver([
+            new StaticMethodLoader(),
+        ])), ImportingTestLoader::class.'::load', ['resource_type' => 'staticmethod']);
+
+        $match = $router->match('/');
+
+        $this->assertArrayHasKey('_route', $match);
+        $this->assertEquals('home', $match['_route']);
+        $this->assertInstanceOf(Routing\RouteCollection::class, TestLoader::$routes, sprintf(
+            'should have called %s::load with a route collection',
+            TestLoader::class
+        ));
+        $this->assertEquals([new FileResource(__FILE__)], TestLoader::$routes->getResources());
+    }
+
     protected function setUp()
     {
         TestLoader::$routes = null;
+        ImportingTestLoader::$routes = null;
     }
 
     private static function makeRouter($resource, $resourceType=StaticMethodLoader::TYPE)
@@ -91,5 +112,16 @@ final class TestLoader
     {
         self::$routes = $routes;
         $routes->add('home', new Routing\Route('/'));
+    }
+}
+
+final class ImportingTestLoader
+{
+    public static $routes = null;
+
+    public static function load(Routing\RouteCollection $routes, Loader $loader)
+    {
+        self::$routes = $routes;
+        $routes->addCollection($loader->import(TestLoader::class.'::load', 'staticmethod'));
     }
 }

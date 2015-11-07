@@ -45,7 +45,7 @@ final class StaticMethodLoader extends Loader
 
         list($class, $method) = self::assureValidResource($resource);
 
-        call_user_func([$class, $method], $routes = new RouteCollection());
+        call_user_func([$class, $method], $routes = new RouteCollection(), $this);
 
         self::addResources(new \ReflectionClass($class), $routes);
 
