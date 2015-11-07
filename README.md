@@ -37,7 +37,9 @@ Pass the `StaticMethodLoader` to your main `Router` class or pass it to a
 
 ```php
 use Symfony\Component\Config\Loader\DelegatingLoader;
+use Symfony\Component\Config\Loader\LoaderResolver;
 use Symfony\Component\Routing\Router;
+use Symfony\Component\Routing\Loader\YamlFileLoader;
 use Symfony\Component\Routing\Loader\YamlFileLoader;
 use Chrisguitarguy\StaticMethodLoader\StaticMethodLoader;
 
@@ -47,10 +49,10 @@ $router = new Router(new StaticMethodLoader(), 'Vendor\Package\ClassName::load',
 ]);
 
 // or with a DelegatingLoader
-$router = new Router(new DelegatingLoader([
+$router = new Router(new DelegatingLoader( new LoaderResolver([
     new YamlFileLoader(),
     new StaticMethodLoader(),
-]), 'path/to/routing.yml');
+])), 'path/to/routing.yml');
 ```
 
 ## License
