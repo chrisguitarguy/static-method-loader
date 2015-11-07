@@ -24,6 +24,16 @@ final class StaticMethodLoader extends Loader
     const TYPE = 'staticmethod';
 
     /**
+     * @var ClassNameResolver
+     */
+    private $classResolver;
+
+    public function __construct(ClassNameResolver $classResolver=null)
+    {
+        $this->classResolver = $classResolver ?: new Resolver\SimpleResolver();
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function supports($resource, $type=null)
@@ -43,23 +53,23 @@ final class StaticMethodLoader extends Loader
             ));
         }
 
-        list($class, $method) = self::assureValidResource($resource);
+        list($class, $method) = $this->assureValidResource($resource);
 
         call_user_func([$class, $method], $routes = new RouteCollection(), $this);
 
-        self::addResources(new \ReflectionClass($class), $routes);
+        $this->addResources(new \ReflectionClass($class), $routes);
 
         return $routes;
     }
 
-    private static function addResources(\ReflectionClass $ref, RouteCollection $routes)
+    private function addResources(\ReflectionClass $ref, RouteCollection $routes)
     {
         do {
             $routes->addResource(new FileResource($ref->getFileName()));
         } while ($ref = $ref->getParentClass());
     }
 
-    private static function assureValidResource($resource)
+    private function assureValidResource($resource)
     {
         $parts = explode('::', $resource, 2);
         if (count($parts) !== 2) {
@@ -70,14 +80,14 @@ final class StaticMethodLoader extends Loader
             ));
         }
 
-        if (!class_exists($parts[0])) {
-            throw new Exception\LogicException(sprintf('class %s does not exist', $parts[0]));
-        }
+        list($class, $method) = $parts;
 
-        if (!is_callable($parts)) {
+        $class = $this->classResolver->resolve($class);
+
+        if (!is_callable([$class, $method])) {
             throw new Exception\LogicException(sprintf('%s is not callable', $resource));
         }
 
-        return $parts;
+        return [$class, $method];
     }
 }
